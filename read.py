@@ -3,7 +3,11 @@ import sys
 p_y = {}
 p_yi_w0 = {}
 p_yi_w1 = {}
-#p_yi_w_1 = {}
+p_yi_w2 = {}
+p_yi_w3 = {}
+p_yi_w_1 = {}
+p_yi_w_2 = {}
+p_yi_w_3 = {}
 total = 0
 alpha = 1.0
 
@@ -15,7 +19,8 @@ def pys():
   	  one = len(a[0])
   	  two = len(a[1])
 	  if (one == two) :
-	        for c in a[1]:
+		a1 = "_" + a[1] + "_"
+	        for c in a1:
 		    if (p_y.has_key(c)):
 			p_y[c] = p_y[c] + 1.0
 		    else:
@@ -47,6 +52,61 @@ def upPYiW1(word, phon):
         else:
  	  p_yi_w1[key] = 1.0
 
+def upPYiW_1(word, phon):
+  for i in range(1, len(phon)):
+	y = phon[i]
+	w0 = word[i - 1]
+	key = y + w0
+	if (p_yi_w_1.has_key(key)):
+	  p_yi_w_1[key] = p_yi_w_1[key] + 1.0
+        else:
+ 	  p_yi_w_1[key] = 1.0
+
+
+def upPYiW_2(word, phon):
+  for i in range(2, len(phon)):
+	y = phon[i]
+	w0 = word[i - 2]
+	key = y + w0
+	if (p_yi_w_2.has_key(key)):
+	  p_yi_w_2[key] = p_yi_w_2[key] + 1.0
+        else:
+ 	  p_yi_w_2[key] = 1.0
+
+
+def upPYiW_3(word, phon):
+  for i in range(3, len(phon)):
+	y = phon[i]
+	w0 = word[i - 3]
+	key = y + w0
+	if (p_yi_w_3.has_key(key)):
+	  p_yi_w_3[key] = p_yi_w_3[key] + 1.0
+        else:
+ 	  p_yi_w_3[key] = 1.0
+
+
+def upPYiW2(word, phon):
+  for i in range(0, len(phon) - 2):
+	y = phon[i]
+	w0 = word[i + 2]
+	key = y + w0
+	if (p_yi_w2.has_key(key)):
+	  p_yi_w2[key] = p_yi_w2[key] + 1.0
+        else:
+ 	  p_yi_w2[key] = 1.0
+
+
+
+def upPYiW3(word, phon):
+  for i in range(0, len(phon) - 3):
+	y = phon[i]
+	w0 = word[i + 3]
+	key = y + w0
+	if (p_yi_w3.has_key(key)):
+	  p_yi_w3[key] = p_yi_w3[key] + 1.0
+        else:
+ 	  p_yi_w3[key] = 1.0
+
 
 def getProd(str, y):
 	ny = p_y[y]
@@ -54,13 +114,38 @@ def getProd(str, y):
 	key = y + str[3]
 	if (p_yi_w0.has_key(key)):
 	  nyi = p_yi_w0[key]      
-	w0 = (nyi + alpha) / (ny + (alpha * 26 * 2))
+	w0 = (nyi + alpha) / (ny + (alpha * 26 * 7))
 	nyi = 0.0
 	key = y + str[4]
 	if (p_yi_w1.has_key(key)):
 	  nyi = p_yi_w1[key]      
-	w1 = (nyi + alpha) / (ny + (alpha * 26 * 2))
-	return (w0 * w1)
+	w1 = (nyi + alpha) / (ny + (alpha * 26 * 7))
+	nyi = 0.0
+	key = y + str[2]
+	if (p_yi_w_1.has_key(key)):
+	  nyi = p_yi_w_1[key]      
+	w_1 = (nyi + alpha) / (ny + (alpha * 26 * 7))
+	nyi = 0.0
+	key = y + str[1]
+	if (p_yi_w_2.has_key(key)):
+	  nyi = p_yi_w_2[key]      
+	w_2 = (nyi + alpha) / (ny + (alpha * 26 * 7))
+	nyi = 0.0
+	key = y + str[0]
+	if (p_yi_w_3.has_key(key)):
+	  nyi = p_yi_w_3[key]      
+	w_3 = (nyi + alpha) / (ny + (alpha * 26 * 7))
+	nyi = 0.0
+	key = y + str[5]
+	if (p_yi_w2.has_key(key)):
+	  nyi = p_yi_w2[key]      
+	w2 = (nyi + alpha) / (ny + (alpha * 26 * 7))
+	nyi = 0.0
+	key = y + str[6]
+	if (p_yi_w3.has_key(key)):
+	  nyi = p_yi_w3[key]      
+	w3 = (nyi + alpha) / (ny + (alpha * 26 * 7))
+	return (w0 * w1 * w2 * w3 * w_1 * w_2 * w_3)
 
 
 
@@ -94,8 +179,15 @@ with open(sys.argv[1]) as f:
   	  one = len(a[0])
   	  two = len(a[1])
 	  if (one == two) :
+		a[0] = "_" + a[0] + "_"
+		a[1] = "_" + a[1] + "_"
 		upPYiW0(a[0], a[1])
 		upPYiW1(a[0], a[1])
+		upPYiW_1(a[0], a[1])
+		upPYiW_2(a[0], a[1])
+		upPYiW_3(a[0], a[1])
+		upPYiW2(a[0], a[1])
+		upPYiW3(a[0], a[1])
 
 end = 0.0
 right = 0.0

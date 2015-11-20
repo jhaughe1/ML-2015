@@ -6,6 +6,7 @@ Phonological Learning of English Pronunciation
 """
 
 import DataReader as dataReader
+import Network as network
 
 # read data from the nettalk data set
 f = 'nettalk.data.txt'
@@ -19,3 +20,5 @@ for example in examples:
     if i < 5:
         i += 1
         print example[0] + ' is pronounced like ' + example[1]
+
+network.runNetwork(examples, 0, 27, 40, 50)

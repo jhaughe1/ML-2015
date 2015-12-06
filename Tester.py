@@ -21,5 +21,7 @@ for example in examples:
         i += 1
         print example[0] + ' is pronounced like ' + example[1]
 
-network = Network.Network()
-network.runNetwork(examples, 0, 27, 40, 50)
+
+
+network = Network.Network([examples[0]], 0, 27, 40, 51, 0.3)
+network.train_network()

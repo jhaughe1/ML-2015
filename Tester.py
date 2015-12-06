@@ -21,7 +21,13 @@ for example in examples:
         i += 1
         print example[0] + ' is pronounced like ' + example[1]
 
+middle = int(len(examples)/10000)
+# train = examples[0:middle]
+train = [examples[2]]
+# test = examples[middle:2*middle]
+test = train
 
-
-network = Network.Network([examples[0]], 0, 27, 40, 51, 0.3)
+network = Network.Network(train, test, 1, 27, 20, 53, 0.5, 1000)
 network.train_network()
+network.test_network()
+#print network.hiddenW

@@ -66,14 +66,16 @@ class Network:
     """
     def train_network(self):
         for t in range(self.iterations):
+            hidden_totals = np.zeros([self.window_size*self.num_input, self.num_hidden])
+            output_totals = np.zeros([self.num_hidden, self.num_output])
             for example in self.data:
                 word = example[0]
                 pron = example[1]
                 letters = list(word)
                 sounds = list(pron)
 
-                hidden_totals = np.zeros([self.window_size*self.num_input, self.num_hidden])
-                output_totals = np.zeros([self.num_hidden, self.num_output])
+                # hidden_totals = np.zeros([self.window_size*self.num_input, self.num_hidden])
+                # output_totals = np.zeros([self.num_hidden, self.num_output])
 
                 # for each letter in the word, perform forward propagation to calculate
                 # the error and deltas for each letter, which will be added up for
@@ -97,17 +99,17 @@ class Network:
                         for k in range(self.num_output):
                             output_totals[j, k] += output_delta_update[j, k]
 
-                # now perform the weight updates after the whole word has been processed
-                for n in range(self.window_size):
-                    for i in range(self.num_input):
-                        for j in range(self.num_hidden):
-                            index = n*self.window_size + i
-                            old_weight = self.hiddenW[index, j]
-                            self.hiddenW[index, j] = old_weight + self.learning_rate*hidden_totals[index, j]
-                for j in range(self.num_hidden):
-                    for k in range(self.num_output):
-                        old_weight = self.outputW[j, k]
-                        self.outputW[j, k] = old_weight + self.learning_rate*output_totals[j, k]
+            # now perform the weight updates after the whole word has been processed
+            for n in range(self.window_size):
+                for i in range(self.num_input):
+                    for j in range(self.num_hidden):
+                        index = n*self.window_size + i
+                        old_weight = self.hiddenW[index, j]
+                        self.hiddenW[index, j] = old_weight + self.learning_rate*(hidden_totals[index, j]/float(len(self.data)))
+            for j in range(self.num_hidden):
+                for k in range(self.num_output):
+                    old_weight = self.outputW[j, k]
+                    self.outputW[j, k] = old_weight + self.learning_rate*(output_totals[j, k]/float(len(self.data)))
 
 
     """
@@ -148,9 +150,15 @@ class Network:
         for k in range(self.num_output):
             output_deltas[k] = self.output_units[k]*(1 - self.output_units[k])
             if k == active:
-                output_deltas[k] += 1 - self.output_units[k]
+                if self.output_units[k] < 0.9:
+                    output_deltas[k] += 1 - self.output_units[k]
+                else:
+                    output_deltas[k] += 0
             else:
-                output_deltas[k] += 0 - self.output_units[k]
+                if self.output_units[k] > 0.1:
+                    output_deltas[k] += 0 - self.output_units[k]
+                else:
+                    output_deltas[k] += 0
         for j in range(self.num_hidden):
             hidden_deltas[j] = self.hidden_units[j]*(1 - self.hidden_units[j])
             backprop = 0
@@ -225,16 +233,24 @@ class Network:
 
                 # index that should be active
                 active = self.getIndexForPhoneme(sounds[l])
+                desired = 0
+                maximum = 0
                 for k in range(self.num_output):
                     print str(k) + ": " + str(self.output_units[k])
                     if k == active:
-                        if self.output_units[k] < 0.9:
-                            correctletter = False
-                            correct = False
+                        # if self.output_units[k] < 0.9:
+                        #     # correctletter = False
+                        #     # correct = False
+                        desired = self.output_units[k]
                     else:
-                        if self.output_units[k] > 0.1:
-                            correctletter = False
-                            correct = False
+                        # if self.output_units[k] > 0.1:
+                        #     # correctletter = False
+                        if self.output_units[k] > maximum:
+                            maximum = self.output_units[k]
+                            # correct = False
+                if desired <= maximum:
+                    correctletter = False
+                    correct = False
                 if correctletter:
                     correctletters += 1
                     printletters.append(letters[l])

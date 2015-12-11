@@ -10,14 +10,13 @@ import Network
 
 # read data from the nettalk data set
 f = 'nettalk.data.txt'
-examples, words, prons = dataReader.readDataFile(f)
 
-middle = int(len(examples)/10000)
-# train = examples[0:middle]
-train = examples[0:5]
-# test = examples[middle:2*middle]
-test = train
+examples, words, prons = dataReader.readDataFile('random_100_train.txt')
+examples2, words2, prons2 = dataReader.readDataFile('random_100_test.txt')
 
-network = Network.Network(train, test, 1, 20, 25, 53, 1.0, 500)
+train = examples
+test = examples2
+
+network = Network.Network(train, test, 1, 120, 27, 53, 0.5, 1)
 network.train_network()
 network.test_network()

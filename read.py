@@ -196,7 +196,7 @@ pright = 0.0
 
 
 #pred("ape")
-with open(sys.argv[1]) as f:
+with open(sys.argv[2]) as f:
     for line in f:
 	a = line.split()
 	if (len(a) > 1):

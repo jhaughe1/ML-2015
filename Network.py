@@ -8,6 +8,7 @@ Phonological Learning of English Pronunciation
 
 import numpy as np
 import math
+import PhonemeFeatures as features
 
 class Network:
 
@@ -22,6 +23,7 @@ class Network:
         self.test_data = test
         self.learning_rate = learning_rate
         self.iterations = iterations
+        self.countletters = 1
 
         self.initializeUnits()
 
@@ -37,6 +39,9 @@ class Network:
         for j in range(self.num_hidden):
             for k in range(self.num_output):
                 self.outputW[j, k] = np.random.uniform(-0.3, 0.3)
+
+        # initialize phoneme counter
+        self.phonemeCounter = features.PhonemeFeatures()
 
 
     """
@@ -65,7 +70,10 @@ class Network:
     I might possible need to add iterations?
     """
     def train_network(self):
+        hiddenweightupdate = 0
+        outputweightupdate = 0
         for t in range(self.iterations):
+
             for example in self.data:
                 word = example[0]
                 pron = example[1]
@@ -86,16 +94,18 @@ class Network:
                         if x < 0 or x > (len(letters) - 1):
                             window.append('_')
                         else:
-                            window.append(letters[l])
+                            window.append(letters[x])
                     output_delta_update, hidden_delta_update = self.get_letter_prediction(window, sounds[l])
                     for n in range(self.window_size):
                         for i in range(self.num_input):
                             for j in range(self.num_hidden):
                                 index = n*self.window_size + i
                                 hidden_totals[index, j] += hidden_delta_update[index, j]
+                                # hidden_totals[index, j] = hidden_delta_update[index, j]
                     for j in range(self.num_hidden):
                         for k in range(self.num_output):
                             output_totals[j, k] += output_delta_update[j, k]
+                            # output_totals[j, k] = output_delta_update[j, k]
 
                 # now perform the weight updates after the whole word has been processed
                 for n in range(self.window_size):
@@ -103,19 +113,22 @@ class Network:
                         for j in range(self.num_hidden):
                             index = n*self.window_size + i
                             old_weight = self.hiddenW[index, j]
-                            self.hiddenW[index, j] = old_weight + self.learning_rate*hidden_totals[index, j]
+                            weightupdate = 0.9*hiddenweightupdate + 0.1*hidden_totals[index, j]
+                            self.hiddenW[index, j] = old_weight + self.learning_rate*weightupdate
+                            hiddenweightupdate = weightupdate
                 for j in range(self.num_hidden):
                     for k in range(self.num_output):
                         old_weight = self.outputW[j, k]
-                        self.outputW[j, k] = old_weight + self.learning_rate*output_totals[j, k]
-
+                        weightupdate = 0.9*outputweightupdate + 0.1*output_totals[j, k]
+                        self.outputW[j, k] = old_weight + self.learning_rate*weightupdate
+                        outputweightupdate = weightupdate
 
     """
     Get the network's prediction for an example.
     """
     def get_letter_prediction(self, window, p):
         self.initializeUnits()
-
+#
         output_deltas = []
         for k in range(self.num_output):
             output_deltas.append(0.0)
@@ -178,8 +191,10 @@ class Network:
     Get the accuracy of the network by testing it on the test data.
     """
     def test_network(self):
+        print "START TESTING"
         num_correct = 0
         correctletters = 0
+        numletters = 0
         for example in self.test_data:
             correct = True
 
@@ -193,6 +208,8 @@ class Network:
             # the whole word itself
             printletters = []
             for l in range(len(letters)):
+                self.countletters += 1
+                numletters += 1
                 correctletter = True
                 window = []
                 inclusive = l - ((self.window_size - 1)/2)
@@ -201,7 +218,7 @@ class Network:
                     if x < 0 or x > (len(letters) - 1):
                         window.append('_')
                     else:
-                        window.append(letters[l])
+                        window.append(letters[x])
                 self.initializeUnits()
                 # fix active units in the input
                 for n in range(self.window_size):
@@ -225,19 +242,24 @@ class Network:
 
                 # index that should be active
                 active = self.getIndexForPhoneme(sounds[l])
+                desired = 0
+                maximum = 0
+                maxindex = -1
                 for k in range(self.num_output):
-                    print str(k) + ": " + str(self.output_units[k])
                     if k == active:
-                        if self.output_units[k] < 0.9:
-                            correctletter = False
-                            correct = False
+                        desired = self.output_units[k]
                     else:
-                        if self.output_units[k] > 0.1:
-                            correctletter = False
-                            correct = False
+                        if self.output_units[k] > maximum:
+                            maximum = self.output_units[k]
+                            maxindex = k
+                if desired <= maximum:
+                    correctletter = False
+                    correct = False
+                    self.phonemeCounter.addPhonemesToCount(self.getPhonForIndex(maxindex), sounds[l])
+                else:
+                    self.phonemeCounter.addPhonemesToCount(sounds[l], sounds[l])
                 if correctletter:
                     correctletters += 1
-                    printletters.append(letters[l])
 
             if correct:
                 num_correct += 1
@@ -247,15 +269,24 @@ class Network:
         print 'STATS'
         print 'Accuracy (' + str(num_correct) + '/' + str(len(self.test_data)) + '): ' + str(accuracy)
         print 'correct letters: ' + str(correctletters)
+        print 'num letters: ' + str(numletters)
         print printletters
+        self.phonemeCounter.evaluate()
 
 
     """
     Return the index in the input arrays for a particular letter.
     """
     def getIndexForLetter(self, letter):
-        return (ord(letter) - ord('a'))
-
+        # return (ord(letter) - ord('a'))
+        return {
+            'a': 0, 'b': 1, 'c': 2, 'd': 3, 'e': 4,
+            'f': 5, 'g': 6, 'h': 7, 'i': 8, 'j': 9,
+            'k': 10, 'l': 11, 'm': 12, 'n': 13, 'o': 14,
+            'p': 15, 'q': 16, 'r': 17, 's': 18, 't': 19,
+            'u': 20, 'v': 21, 'w': 22, 'x': 23, 'y': 24,
+            'z': 25, '_': 26
+        }[letter]
 
     """
     Return the index in the output array for a particular phoneme.
@@ -286,7 +317,19 @@ class Network:
     Return the phoneme for a particular index in the output array.
     """
     def getPhonForIndex(self, index):
-        return 'X'
+        return [
+            'a', 'b', 'c', 'd', 'e',
+            'f', 'g', 'h', 'i', 'k',
+            'l', 'm', 'n', 'o', 'p',
+            'r', 's', 't', 'u', 'v',
+            'w', 'x', 'y', 'z', 'A',
+            'C', 'D', 'E', 'G', 'I',
+            'J', 'K', 'L', 'M', 'N',
+            'O', 'Q', 'R', 'S', 'T',
+            'U', 'W', 'X', 'Y', 'Z',
+            '@', '!', '#', ':', '^',
+            '+', '*', '-'
+        ][index]
 
 
     """

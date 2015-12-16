@@ -3,6 +3,10 @@ Jacquelyn Haughey
 
 English Phonological Transcriptions
 
+Neural Network Algorithm
+To run (edit variables set in Tester.py):
+python Tester.py
+
 Naive Bayes Algorithm
 To run:
 python bayes.py [training data] [testing data]
